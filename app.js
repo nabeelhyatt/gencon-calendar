@@ -1,3 +1,49 @@
+// ABOUTME: This file contains the javascript for the Gen Con calendar.
+// ABOUTME: It handles sorting events by time or by checked status, and tab navigation.
+
+// Function to sort events dynamically
+function sortEvents(day) {
+    const sortValue = document.getElementById(`sort-${day}`).value;
+    const eventList = document.getElementById(`event-list-${day}`);
+    if (!eventList) return;
+
+    const events = Array.from(eventList.getElementsByClassName('event-card'));
+
+    events.sort((a, b) => {
+        if (sortValue === 'time') {
+            const timeTextA = a.querySelector('.event-time').innerText.trim();
+            const timeTextB = b.querySelector('.event-time').innerText.trim();
+
+            const getTimeInMinutes = (timeText) => {
+                const timeString = timeText.split('\n')[0]; // e.g., "1:00 PM"
+                const parts = timeString.split(' '); // e.g., ["1:00", "PM"]
+                if (parts.length < 2) return 0; // Handle cases with no AM/PM
+                const time = parts[0];
+                const period = parts[1];
+                let [hours, minutes] = time.split(':').map(Number);
+
+                if (period.toUpperCase() === 'PM' && hours !== 12) {
+                    hours += 12;
+                }
+                if (period.toUpperCase() === 'AM' && hours === 12) { // Midnight case
+                    hours = 0;
+                }
+                return hours * 60 + (minutes || 0);
+            };
+
+            return getTimeInMinutes(timeTextA) - getTimeInMinutes(timeTextB);
+        } else if (sortValue === 'checked') {
+            const checkedA = a.querySelector('input[type="checkbox"]').checked;
+            const checkedB = b.querySelector('input[type="checkbox"]').checked;
+            return checkedB - checkedA; // true (1) comes before false (0)
+        }
+        return 0;
+    });
+
+    // Append sorted events back to the list
+    events.forEach(event => eventList.appendChild(event));
+}
+
 // GenCon 2025 Interactive Calendar JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -117,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle URL hash on page load
     function handleInitialHash() {
         const hash = window.location.hash.substring(1);
-        const validDays = ['thursday', 'friday', 'saturday', 'sunday'];
+        const validDays = ['thursday', 'friday', 'saturday', 'sunday', 'booths'];
         
         if (hash && validDays.includes(hash)) {
             switchToDay(hash);
@@ -130,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle browser back/forward buttons
     window.addEventListener('hashchange', function() {
         const hash = window.location.hash.substring(1);
-        const validDays = ['thursday', 'friday', 'saturday', 'sunday'];
+        const validDays = ['thursday', 'friday', 'saturday', 'sunday', 'booths'];
         
         if (hash && validDays.includes(hash)) {
             switchToDay(hash);
@@ -384,6 +430,127 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
     }
     
+    // Booth data and rendering
+    const boothData = [
+        // HIGHEST Priority - Organized by Booth Number Zones
+        { booth: "403", company: "Alderac (AEG)", knownFor: "Unstoppable (John D. Clair)", priority: "HIGHEST", visitDay: "Thursday" },
+        { booth: "1643", company: "Cephalofair Games", knownFor: "Gloomhaven / Frosthaven", priority: "HIGHEST", visitDay: "Saturday" },
+        { booth: "2250", company: "Paverson Games", knownFor: "Luthier (Dave Beck)", priority: "HIGHEST", visitDay: "Friday" },
+        { booth: "2402", company: "Dire Wolf", knownFor: "Lightning Train (Paul Dennen)", priority: "HIGHEST", visitDay: "Friday" },
+        { booth: "2435", company: "Scorpion Masqué (Hachette)", knownFor: "Tag Team (Lebrat & German)", priority: "HIGHEST", visitDay: "Friday" },
+        { booth: "n/a", company: "Sophisticated Cerberus / Crowd Games", knownFor: "Sprocketforge", priority: "HIGHEST", visitDay: "Sunday" },
+
+        // HIGH Priority - Organized by Booth Number Zones
+        { booth: "142", company: "Abbots Hollow Studios", knownFor: "Indie designs", priority: "HIGH", visitDay: "Thursday" },
+        { booth: "215", company: "Pandasaurus", knownFor: "Gatsby, Sea Salt & Paper", priority: "HIGH", visitDay: "Thursday" },
+        { booth: "229", company: "Ares Games", knownFor: "War of the Ring, Wings of Glory", priority: "HIGH", visitDay: "Thursday" },
+        { booth: "566", company: "Alayna Danner (Artist)", knownFor: "MtG & board-game art", priority: "HIGH", visitDay: "Thursday" },
+        { booth: "629", company: "Arcane Wonders", knownFor: "Sheriff of Nottingham, Overboss Duel", priority: "HIGH", visitDay: "Thursday" },
+        { booth: "712", company: "Adventure Scents", knownFor: "Thematic gaming aromas", priority: "HIGH", visitDay: "Thursday" },
+        { booth: "821", company: "Fantasy Flight Games", knownFor: "Arkham Horror, X-Wing", priority: "HIGH", visitDay: "Thursday" },
+        { booth: "929", company: "Z-Man Games", knownFor: "Pandemic Legacy, Carcassonne", priority: "HIGH", visitDay: "Thursday" },
+        { booth: "2239", company: "IV Studio", knownFor: "Moonrakers: Binding Ties, Veiled Fate", priority: "HIGH", visitDay: "Friday" },
+        { booth: "2627", company: "Chip Theory Games", knownFor: "Too Many Bones, Elder Scrolls", priority: "HIGH", visitDay: "Friday" },
+        { booth: "2801", company: "Academy Games", knownFor: "Historical strategy line", priority: "HIGH", visitDay: "Friday" },
+        { booth: "3027", company: "Capstone Games", knownFor: "Ark Nova, Maracaibo: Pirates", priority: "HIGH", visitDay: "Friday" },
+
+        // MEDIUM Priority - Organized by Booth Number Zones
+        { booth: "1109, 817, 809", company: "Asmodee Group Block", knownFor: "Ticket to Ride, Splendor, Azul", priority: "MEDIUM", visitDay: "Thursday" },
+        { booth: "1129", company: "CMON", knownFor: "Zombicide, Cthulhu: DM", priority: "MEDIUM", visitDay: "Saturday" },
+        { booth: "1352", company: "Bitewing Games", knownFor: "Reiner Knizia line (Iliad, Orbit)", priority: "MEDIUM", visitDay: "Saturday" },
+        { booth: "1443", company: "Good Games", knownFor: "12 Rivers", priority: "MEDIUM", visitDay: "Saturday" },
+        { booth: "1731", company: "Restoration Games", knownFor: "Return to Dark Tower, Unmatched", priority: "MEDIUM", visitDay: "Saturday" },
+        { booth: "1751", company: "ALBI", knownFor: "Euro imports", priority: "MEDIUM", visitDay: "Saturday" },
+        { booth: "1907", company: "AMIGO Games", knownFor: "Saboteur, Bohnanza", priority: "MEDIUM", visitDay: "Saturday" },
+        { booth: "2010", company: "Happy Camper Games", knownFor: "The Four Doors (Matt Leacock)", priority: "MEDIUM", visitDay: "Friday" },
+        { booth: "2138", company: "Archon Studio", knownFor: "Masters of the Universe, Wolfenstein", priority: "MEDIUM", visitDay: "Friday" },
+        { booth: "2243", company: "Ghost Galaxy", knownFor: "LOTR: The Confrontation 2E", priority: "MEDIUM", visitDay: "Friday" },
+        { booth: "2660", company: "Gray Matters Games", knownFor: "Slip It In, You Bet-cha", priority: "MEDIUM", visitDay: "Friday" },
+
+        // LOW Priority - Organized by Booth Number Zones
+        { booth: "n/a", company: "Salt & Pepper Games", knownFor: "Onoda, Resist!", priority: "LOW", visitDay: "Sunday" },
+        { booth: "n/a", company: "Red Raven Games", knownFor: "Above & Below: Haunted", priority: "LOW", visitDay: "Sunday" },
+        { booth: "n/a", company: "García Designer Booth", knownFor: "The Voynich Puzzle (solo designer)", priority: "LOW", visitDay: "Sunday" }
+    ];
+
+    function renderBooths(sortBy = 'priority') {
+        const container = document.getElementById('booth-list-container');
+        if (!container) return;
+
+        const sortedData = [...boothData].sort((a, b) => {
+            if (sortBy === 'priority') {
+                const priorityOrder = { 'HIGHEST': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3 };
+                return priorityOrder[a.priority] - priorityOrder[b.priority];
+            } else if (sortBy === 'day') {
+                const dayOrder = { 'Thursday': 0, 'Friday': 1, 'Saturday': 2, 'Sunday': 3 };
+                return dayOrder[a.visitDay] - dayOrder[b.visitDay];
+            } else if (sortBy === 'booth') {
+                const boothA = a.booth.split(',')[0].trim();
+                const boothB = b.booth.split(',')[0].trim();
+                const numA = parseInt(boothA, 10);
+                const numB = parseInt(boothB, 10);
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return numA - numB;
+                } else if (!isNaN(numA)) {
+                    return -1;
+                } else if (!isNaN(numB)) {
+                    return 1;
+                } else {
+                    return boothA.localeCompare(boothB);
+                }
+            }
+            return 0;
+        });
+
+        let tableHTML = `
+            <div class="booth-controls">
+                <label for="sort-booths">Sort by:</label>
+                <select id="sort-booths">
+                    <option value="priority" ${sortBy === 'priority' ? 'selected' : ''}>Priority</option>
+                    <option value="day" ${sortBy === 'day' ? 'selected' : ''}>Visit Day</option>
+                    <option value="booth" ${sortBy === 'booth' ? 'selected' : ''}>Booth #</option>
+                </select>
+            </div>
+            <table class="booths-table">
+                <thead>
+                    <tr>
+                        <th>Booth #</th>
+                        <th>Company</th>
+                        <th>Known For</th>
+                        <th>Priority</th>
+                        <th>Visit Day</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        sortedData.forEach(booth => {
+            tableHTML += `
+                <tr class="priority-${booth.priority.toLowerCase()}">
+                    <td>${booth.booth}</td>
+                    <td>${booth.company}</td>
+                    <td>${booth.knownFor}</td>
+                    <td><span class="priority-label">${booth.priority}</span></td>
+                    <td>${booth.visitDay}</td>
+                </tr>
+            `;
+        });
+
+        tableHTML += '</tbody></table>';
+        container.innerHTML = tableHTML;
+
+        // Add event listener for the sort dropdown
+        const sortSelect = document.getElementById('sort-booths');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (e) => {
+                renderBooths(e.target.value);
+            });
+        }
+    }
+
+    // Initial render
+    renderBooths();
+
     // Add keyboard shortcuts
     document.addEventListener('keydown', function(e) {
         // Don't trigger shortcuts when typing in inputs
@@ -456,6 +623,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return selected;
     }
     
+    // Convert Event ID text to clickable links
+    function linkifyEventIds() {
+        const eventDescriptions = document.querySelectorAll('.event-description');
+        eventDescriptions.forEach(description => {
+            const text = description.innerHTML;
+            // Replace "Event ID: [number]" with a clickable link
+            const linkedText = text.replace(
+                /Event ID: (\d+)/g,
+                'Event ID: <a href="https://www.gencon.com/events/$1" target="_blank" style="color: #4a90e2; text-decoration: underline;">$1</a>'
+            );
+            description.innerHTML = linkedText;
+        });
+    }
+
     // Initialize everything
     function initialize() {
         console.log('Initializing calendar...');
@@ -474,9 +655,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add search interface
         addSearchInterface();
         
-        // Ensure Thursday is active by default
+        // Convert Event IDs to clickable links
+        linkifyEventIds();
+        
+        // Ensure Saturday is active by default
         if (!document.querySelector('.day-content.active')) {
-            switchToDay('thursday');
+            switchToDay('saturday');
         }
         
         console.log('GenCon 2025 Calendar initialized successfully!');

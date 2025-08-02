@@ -750,6 +750,7 @@ select.form-control {
   --color-gaming: var(--color-slate-700);
   --color-networking: var(--color-gray-400);
   --color-seminar: var(--color-red-400);
+  --color-kepler: #6366f1;
   
   --color-available: var(--color-success);
   --color-sold-out: var(--color-error);
@@ -899,6 +900,45 @@ body {
   font-style: italic;
 }
 
+/* Sort Container */
+.sort-container {
+  margin-bottom: var(--space-16);
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-primary);
+}
+
+.sort-container label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.sort-container select {
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-primary);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.sort-container select:hover {
+  border-color: var(--color-primary);
+}
+
+.sort-container select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
 /* Events List */
 .events-list {
   display: flex;
@@ -943,6 +983,29 @@ body {
   top: var(--space-8);
   right: var(--space-8);
   background: var(--color-warning);
+  color: var(--color-btn-primary-text);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  z-index: 2;
+  box-shadow: var(--shadow-sm);
+}
+
+.event-card.registered {
+  border-left: 4px solid var(--color-success);
+}
+
+.event-card.registered .event-content {
+  padding-top: var(--space-24);
+}
+
+.event-card.registered::after {
+  content: "REGISTERED";
+  position: absolute;
+  top: var(--space-8);
+  right: var(--space-8);
+  background: var(--color-success);
   color: var(--color-btn-primary-text);
   padding: var(--space-4) var(--space-8);
   border-radius: var(--radius-sm);
@@ -1104,6 +1167,10 @@ body {
   background: var(--color-seminar);
 }
 
+.event-card.kepler .event-time {
+  background: var(--color-kepler);
+}
+
 /* Availability States */
 .event-card.available {
   border-left: 3px solid var(--color-available);
@@ -1257,7 +1324,8 @@ body {
 .color-demo,
 .color-exploration,
 .color-tournament,
-.color-workshop {
+.color-workshop,
+.color-kepler {
   width: 16px;
   height: 16px;
   border-radius: var(--radius-sm);
@@ -1278,6 +1346,10 @@ body {
 
 .color-workshop {
   background: var(--color-workshop);
+}
+
+.color-kepler {
+  background: var(--color-kepler);
 }
 
 /* Mobile Responsive */
